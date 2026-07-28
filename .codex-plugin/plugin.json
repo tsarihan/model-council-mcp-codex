@@ -1,0 +1,33 @@
+{
+  "name": "model-council",
+  "version": "0.2.77",
+  "description": "Ask a council of local and cloud AI models for individual, categorized, pooled, dialectic, or deconflicted answers.",
+  "author": {
+    "name": "Tom Sarihan",
+    "url": "https://github.com/tsarihan"
+  },
+  "homepage": "https://github.com/tsarihan/model-council-mcp",
+  "repository": "https://github.com/tsarihan/model-council-mcp",
+  "license": "Apache-2.0",
+  "keywords": ["mcp", "llm", "model-council", "ollama", "codex"],
+  "skills": "./skills/",
+  "mcpServers": {
+    "model-council": {
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/bundle/server.cjs"]
+    }
+  },
+  "interface": {
+    "displayName": "Model Council",
+    "shortDescription": "Compare and synthesize answers from multiple models.",
+    "longDescription": "Route questions and repository reviews to a configurable council of local, subscription-backed, and API-hosted models.",
+    "developerName": "Tom Sarihan",
+    "category": "Developer Tools",
+    "capabilities": ["Read"],
+    "defaultPrompt": [
+      "Ask the model council to review this decision.",
+      "Compare model opinions on my current approach.",
+      "Run a council review of my uncommitted changes."
+    ]
+  }
+}

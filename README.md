@@ -52,6 +52,60 @@ claude plugin validate .
 claude --plugin-dir /path/to/model-council-mcp
 ```
 
+## Install as a Codex plugin
+
+This repository also includes a native Codex manifest at
+`.codex-plugin/plugin.json`. Its inline Codex MCP map and Claude Code's
+`.mcp.json` both launch the same offline `bundle/server.cjs`. Provider choices
+and council settings can be changed after installation with the `setup_council`
+and `configure_council` tools.
+
+For local development, expose this checkout through a local Codex marketplace,
+install `model-council` from that marketplace, then start a new Codex thread.
+Codex resolves `${PLUGIN_ROOT}` to the installed plugin copy, so no absolute
+checkout path is embedded in the package.
+
+### Codex capability parity
+
+The Codex plugin exposes the same bundled server and all nine MCP tools as the
+Claude Code plugin:
+
+- `ask_council` and `ask_council_async` support all five modes, inline context,
+  files, images, git diffs, full-repository review, verbose results, progress,
+  timeout notices, and background jobs.
+- `get_council_result`, `list_models`, `get_council_config`,
+  `configure_council`, `council_status`, `setup_council`, and
+  `set_council_timeouts` retain the same schemas and persisted state.
+- `$model-council-status` is the Codex equivalent of
+  `/model-council:status`.
+- `$setup-model-council` is the Codex equivalent of
+  `/model-council:setup`.
+- The SessionStart hook works in both hosts and prints host-appropriate setup
+  guidance. Codex requires users to review and trust plugin hooks before it
+  runs them.
+
+Claude Code's install-time `/plugin` configuration UI has no direct Codex
+`userConfig` equivalent. In Codex, configure tiers, members, modes, rounds, and
+timeouts through the bundled setup/configuration tools; these changes persist
+in `~/.config/model-council/state.json`. API keys, custom provider endpoints,
+CLI paths, and low-level performance settings use the same environment
+variables documented below. Set them in the environment that launches Codex,
+or use a standalone `codex mcp add ... --env KEY=VALUE` registration when
+per-server values are required.
+
+To exercise only the MCP server without installing the plugin:
+
+```bash
+codex mcp add model-council -- node /absolute/path/to/model-council-mcp/bundle/server.cjs
+codex mcp get model-council
+```
+
+Remove that standalone development registration with:
+
+```bash
+codex mcp remove model-council
+```
+
 ### Configurable options (prompted at install)
 
 These are all set from **`/plugin` → Configure** in Claude Code (or the equivalent env vars shown for standalone installs — e.g. `REQUEST_TIMEOUT_MS` for the timeout, `CLOUD_CONCURRENCY` for the cloud override). They persist across reloads.

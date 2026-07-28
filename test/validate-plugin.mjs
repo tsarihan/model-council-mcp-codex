@@ -1,5 +1,5 @@
 /**
- * Static validation of the plugin manifest, .mcp.json, and marketplace.json.
+ * Static validation of the Claude and Codex plugin manifests and MCP configs.
  * Mirrors the checks `claude plugin validate` performs, plus a cross-check that
  * every ${user_config.KEY} used in .mcp.json is declared in plugin.json.
  */
@@ -84,6 +84,57 @@ else {
   }
   if (uniqueUsed.every(k => declared.has(k))) ok('all user_config references resolve');
 }
+
+// ── Codex plugin ─────────────────────────────────────────────────────────────
+console.log('\n▶ .codex-plugin/plugin.json');
+const codexPlugin = readJson('.codex-plugin/plugin.json');
+if (!codexPlugin) { err('Codex plugin.json missing or unparseable'); }
+else {
+  codexPlugin.name === plugin?.name
+    ? ok(`name matches Claude plugin: ${codexPlugin.name}`)
+    : err('Codex and Claude plugin names differ');
+  codexPlugin.version === plugin?.version
+    ? ok(`version matches Claude plugin: ${codexPlugin.version}`)
+    : err('Codex and Claude plugin versions differ');
+  codexPlugin.author?.name ? ok(`author: ${codexPlugin.author.name}`) : err('missing author.name');
+  codexPlugin.interface?.displayName ? ok('has interface metadata') : err('missing interface.displayName');
+  codexPlugin.skills === './skills/'
+    ? ok('loads Codex setup/status skills')
+    : err('Codex plugin must load ./skills/');
+  codexPlugin.mcpServers?.['model-council']
+    ? ok('declares inline Codex MCP server')
+    : err('missing inline model-council MCP server');
+}
+
+console.log('\n▶ Codex MCP map');
+const codexMcp = codexPlugin?.mcpServers;
+if (!codexMcp) { err('Codex plugin missing mcpServers map'); }
+else {
+  const server = codexMcp['model-council'];
+  server ? ok('declares model-council server') : err('model-council server missing');
+  server?.command === 'node' ? ok('uses node transport command') : err('Codex server command must be node');
+  server?.args?.[0] === '${PLUGIN_ROOT}/bundle/server.cjs'
+    ? ok('uses ${PLUGIN_ROOT} for installed bundle')
+    : err('Codex server path must use ${PLUGIN_ROOT}/bundle/server.cjs');
+  existsSync(join(root, 'bundle/server.cjs'))
+    ? ok('Codex bundle target exists')
+    : err('Codex bundle target missing');
+}
+
+console.log('\n▶ Codex workflow parity');
+for (const skill of ['model-council-status', 'setup-model-council']) {
+  const rel = `skills/${skill}/SKILL.md`;
+  const body = existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : '';
+  body ? ok(`${skill} skill exists`) : err(`${rel} missing`);
+  !body.includes('[TODO:') ? ok(`${skill} has no placeholders`) : err(`${skill} contains TODO placeholders`);
+}
+const welcome = readFileSync(join(root, 'bin/session-welcome.mjs'), 'utf8');
+welcome.includes('$model-council-status') && welcome.includes('$setup-model-council')
+  ? ok('SessionStart advertises Codex skills')
+  : err('SessionStart missing Codex-native guidance');
+welcome.includes('/model-council:status') && welcome.includes('/model-council:setup')
+  ? ok('SessionStart preserves Claude commands')
+  : err('SessionStart lost Claude command guidance');
 
 // ── marketplace.json ─────────────────────────────────────────────────────────
 console.log('\n▶ .claude-plugin/marketplace.json');

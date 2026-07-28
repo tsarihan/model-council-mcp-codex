@@ -1,0 +1,11 @@
+interface:
+  display_name: "Model Council Status"
+  short_description: "Show council models, tiers, health, and quota"
+  default_prompt: "Use $model-council-status to show my current model council status."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "model-council"
+      description: "Model Council status and configuration tools"
+policy:
+  allow_implicit_invocation: true

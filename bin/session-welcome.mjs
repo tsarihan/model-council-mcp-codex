@@ -76,9 +76,12 @@ async function main() {
     `Codex CLI ${codex ? '✓' : '✗'}`,
     `Grok CLI ${grok ? '✓' : '✗'}`,
   ];
+  const codexHost = Boolean(clean(process.env.PLUGIN_ROOT));
+  const controls = codexHost
+    ? 'Use $model-council-status for login + quota detail, $setup-model-council to choose subscription tiers.'
+    : 'Run /model-council:status for login + quota detail, /model-council:setup to choose subscription tiers.';
   process.stdout.write(
-    `[model-council] ${parts.join(' · ')}. Run /model-council:status for login + quota detail, ` +
-    `/model-council:setup to choose subscription tiers.\n`,
+    `[model-council] ${parts.join(' · ')}. ${controls}\n`,
   );
 }
 
