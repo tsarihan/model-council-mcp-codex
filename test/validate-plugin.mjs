@@ -128,13 +128,33 @@ for (const skill of ['model-council-status', 'setup-model-council']) {
   body ? ok(`${skill} skill exists`) : err(`${rel} missing`);
   !body.includes('[TODO:') ? ok(`${skill} has no placeholders`) : err(`${skill} contains TODO placeholders`);
 }
-const welcome = readFileSync(join(root, 'bin/session-welcome.mjs'), 'utf8');
+const welcomePath = join(root, 'bin/session-welcome.mjs');
+const welcome = existsSync(welcomePath) ? readFileSync(welcomePath, 'utf8') : '';
+if (!welcome) err('bin/session-welcome.mjs missing');
 welcome.includes('$model-council-status') && welcome.includes('$setup-model-council')
   ? ok('SessionStart advertises Codex skills')
   : err('SessionStart missing Codex-native guidance');
 welcome.includes('/model-council:status') && welcome.includes('/model-council:setup')
   ? ok('SessionStart preserves Claude commands')
   : err('SessionStart lost Claude command guidance');
+
+// ── Codex marketplace ───────────────────────────────────────────────────────
+console.log('\n▶ .agents/plugins/marketplace.json');
+const codexMarketplace = readJson('.agents/plugins/marketplace.json');
+if (!codexMarketplace) { err('Codex marketplace missing or unparseable'); }
+else {
+  codexMarketplace.name === 'model-council-codex'
+    ? ok(`marketplace name: ${codexMarketplace.name}`)
+    : err('Codex marketplace name must be model-council-codex');
+  const entries = Array.isArray(codexMarketplace.plugins) ? codexMarketplace.plugins : [];
+  const entry = entries.find(p => p?.name === codexPlugin?.name);
+  entry ? ok(`lists plugin: ${codexPlugin?.name}`) : err('Codex marketplace does not list the plugin');
+  entry?.source?.source === 'local' && entry?.source?.path === '.'
+    ? ok('repository-root source resolves to Codex plugin')
+    : err('Codex marketplace source must be local path "."');
+  entry?.policy?.installation === 'AVAILABLE' ? ok('installation policy is AVAILABLE') : err('bad installation policy');
+  entry?.policy?.authentication === 'ON_INSTALL' ? ok('authentication policy is ON_INSTALL') : err('bad authentication policy');
+}
 
 // ── marketplace.json ─────────────────────────────────────────────────────────
 console.log('\n▶ .claude-plugin/marketplace.json');
@@ -154,6 +174,9 @@ else {
         : err('source "./" but no .claude-plugin/plugin.json at root');
     }
   }
+  mkt.metadata?.version === plugin?.version
+    ? ok('marketplace metadata version matches plugin')
+    : err(`marketplace metadata version ${mkt.metadata?.version ?? '(missing)'} does not match plugin ${plugin?.version ?? '(missing)'}`);
 }
 
 // ── Summary ────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 {
   "name": "model-council-mcp",
   "version": "0.2.77",
-  "description": "MCP server: ask a council of local and cloud AI models, get individual, categorized, or fully deconflicted answers",
+  "description": "MCP server: ask local and cloud AI models for individual, categorized, deconflicted, pooled, or dialectic answers",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -36,13 +36,13 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
-    "@modelcontextprotocol/sdk": "^1.10.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "openai": "^4.77.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.28.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   },
@@ -57,13 +57,18 @@
     "hooks",
     "commands",
     "skills",
+    ".agents",
+    ".claude-plugin",
     ".codex-plugin",
+    ".mcp.json",
+    "QUICKSTART.md",
     "README.md",
+    "PRIVACY.md",
     "NOTICE",
     "LICENSE"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tsarihan/model-council-mcp.git"
+    "url": "git+https://github.com/tsarihan/model-council-mcp-codex.git"
   }
 }

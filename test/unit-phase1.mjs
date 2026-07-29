@@ -758,7 +758,7 @@ console.log('▶ round-15: transient "quota" wording, extensionless secret filen
     check(`extensionless @${f} is neutralized`, neutralizeFileMentions(`read @${f}`) !== `read @${f}`);
   }
   // …without eating ordinary handles or addresses.
-  for (const t of ['ask @tom', 'use @Override', 'mail bob@example.com', 'cc @jane-doe@corp.com']) {
+  for (const t of ['ask @tom', 'ask @go', 'use @Override', 'mail bob@example.com', 'cc @jane-doe@corp.com']) {
     check(`left untouched: ${t}`, neutralizeFileMentions(t) === t);
   }
 }

@@ -9,7 +9,9 @@ Call the `model-council` MCP server's `council_status` tool exactly once.
 
 Present:
 
-- Detected Ollama, Claude CLI, Codex CLI, and Grok CLI availability and login state.
+- Detected Ollama availability; Claude and Codex login state; and whether Grok
+  CLI is installed but fail-closed. Do not claim Grok login was verified unless
+  the returned status explicitly says it was probed under the unsafe testing override.
 - Current members grouped by provider, preserving every model ID verbatim.
 - Resolved tiers, provider concurrency limits, and text/repository timeouts.
 - The quota warning verbatim.

@@ -1,16 +1,16 @@
 # Quickstart
 
 `model-council-mcp` fans one question out to a **council of models** — local (Ollama),
-self-hosted (vLLM / SGLang / TRT-LLM), your **Claude**, **ChatGPT**, and **Grok**
-subscriptions (via the first-party `claude` / `codex` / `grok` CLIs, no API key), and
-cloud APIs — then reconciles their answers. It is designed to **just work** the moment
+self-hosted (vLLM / SGLang / TRT-LLM), your **Claude** and **ChatGPT**
+subscriptions (via the first-party `claude` / `codex` CLIs, no API key), and cloud
+APIs (including X.AI) — then reconciles their answers. It is designed to **just work** the moment
 you install it: it auto-discovers what you already have and asks you to configure only
 what it can't detect.
 
-- **Install (Claude Code plugin):**
+- **Install (Codex plugin):**
   ```
-  /plugin marketplace add tsarihan/model-council-mcp
-  /plugin install model-council@model-council
+  codex plugin marketplace add tsarihan/model-council-mcp-codex
+  codex plugin add model-council@model-council-codex
   ```
 - **Install (standalone MCP, any client):**
   ```
@@ -18,7 +18,7 @@ what it can't detect.
   ```
 
 On first use it detects your environment, builds a council, and tells you what it
-found. Change anything anytime with **`/model-council:setup`** (interactive) or the
+found. Change anything anytime with **`$setup-model-council`** (interactive) or the
 `configure_council` / `setup_council` tools. Ask with `ask_council`.
 
 ---
@@ -61,17 +61,16 @@ Codex members (`gpt-5.6-sol`, `gpt-5.6-luna`, `gpt-5.6-terra`) are added **only 
 CLI is detected as signed in**. Note: Codex is a coding agent, so its answers carry a
 coding-agent flavor. Override with `codex_cli_models`.
 
-### 4) Ollama + Grok (your X.AI subscription, via the Grok Build CLI)
+### 4) Ollama + Grok (via the X.AI API)
 
-- Install xAI's **Grok Build CLI** and log in (`grok`, then follow its sign-in flow).
-- Set `grok_tier` to match your plan (`supergrok` · `premiumplus` · `heavy`).
+- Set `XAI_API_KEY` in the environment that launches Codex.
+- Add the X.AI model you want with `configure_council`.
 
-Unlike Claude/ChatGPT, **Grok is opt-in even when the CLI is detected as logged
-in** — its tier defaults to `free` (no Grok members) since it's a newer provider added
-on top of an existing install base. Set `grok_tier` above `free` and the `grok-4.5`
-member is added. Override the model list with `grok_cli_models`.
+The Grok CLI provider intentionally fails closed because the CLI does not have a
+verified tool-lockdown mode. Do not enable its unsafe testing override on an
+untrusted repository; use the X.AI API provider instead.
 
-### 5) Everything — Ollama + Claude + Codex + Grok + vLLM + SGLang + TRT-LLM
+### 5) Everything — Ollama + Claude + Codex + X.AI + vLLM + SGLang + TRT-LLM
 
 Do scenarios 1–4, **plus** point the plugin at your self-hosted OpenAI-compatible
 servers. These are the one thing the plugin cannot discover on its own (it doesn't scan
@@ -96,14 +95,13 @@ configure_council(models=[
   "trtllm/gpu1:my-model",
   "ollama:llama3.1:8b",
   "claude-cli:opus", "claude-cli:sonnet", "claude-cli:haiku",
-  "codex-cli:gpt-5.6-sol", "codex-cli:gpt-5.6-luna", "codex-cli:gpt-5.6-terra",
-  "grok-cli:grok-4.5"
+  "codex-cli:gpt-5.6-sol", "codex-cli:gpt-5.6-luna", "codex-cli:gpt-5.6-terra"
 ])
 ask_council(question="…", mode="pooled")
 ```
 
-> Slow local models (large MLX/GGUF)? Raise `request_timeout_ms` (default 120000 ms).
-> CLI providers keep a 300 s floor regardless.
+> Slow local models (large MLX/GGUF)? Raise `request_timeout_ms` (default
+> 300000 ms / 5 minutes). CLI providers honor an explicit timeout verbatim.
 
 ---
 
@@ -122,16 +120,16 @@ server or a logged-in CLI, it figures out the rest.
 | vLLM / SGLang context window | ✅ auto | `max_model_len` from `/v1/models` → clamps `max_tokens` |
 | TRT-LLM model names | ✅ auto | `/v1/models` |
 | **TRT-LLM context window** | ⚠️ not advertised | TRT-LLM's `/v1/models` omits it; your `max_tokens` is sent as-is — size it yourself |
-| Claude / Codex / Grok **login state** | ✅ auto | detected; subscription members are added only when logged in |
+| Claude / Codex **login state** | ✅ auto | detected; subscription members are added only when logged in |
 | Judge model | ✅ auto | largest council member (override with `judge_model`) |
 | Claude CLI model list | ⚙️ preset | `opus, sonnet, haiku` from bundled reference data — override with `claude_cli_models` |
 | Codex CLI model list | ⚙️ preset | `gpt-5.6-*` from bundled reference data — override with `codex_cli_models` |
-| Grok CLI model list | ⚙️ preset | `grok-4.5` from bundled reference data — override with `grok_cli_models` |
+| Grok CLI model list | 🚫 disabled | Tool lockdown is unsafe; use the X.AI API provider instead |
 | Curated Ollama **cloud** models | ⚙️ preset | a top set from bundled reference data (needs `ollama_tier` pro/max) |
 | **Self-hosted server address** | ❌ you set | `vllm_servers` / `trtllm_servers` / `sglang_servers` (`name:host:port`) |
 | **API keys** | ❌ you set | `openai_api_key` / `anthropic_api_key` / `xai_api_key` |
-| **Subscription tiers** | ❌ you set (has defaults) | `claude_tier` / `chatgpt_tier` / `ollama_tier` / `grok_tier` — set to your real plan (drives cloud access + concurrency; `grok_tier` defaults to `free` — opt-in) |
-| CLI executable paths | ❌ you set (has defaults) | `claude_cli_path` / `codex_cli_path` / `grok_cli_path` if not on `PATH` |
+| **Subscription tiers** | ❌ you set (has defaults) | `claude_tier` / `chatgpt_tier` / `ollama_tier` — set to your real plan (drives cloud access + concurrency) |
+| CLI executable paths | ❌ you set (has defaults) | `claude_cli_path` / `codex_cli_path` if not on `PATH` |
 
 ⚙️ **preset** = comes from `config/subscriptions.json`, a checked-in reference file the
 CLIs can't enumerate on their own. It's updated by pulling the repo, or override per
@@ -159,7 +157,7 @@ member) — e.g. review a snippet of code or a design doc across the whole counc
 ask_council(question="What's wrong with this auth flow?", mode="dialectic",
             files=["src/auth.ts"], context="This is a public SaaS signup path.")
 ```
-Caps: 256 KB/file, 768 KB total, 20 files (pass an excerpt via `context` for bigger inputs).
+Default caps: 512 KB/file, 1.5 MB total, 32 files (pass an excerpt via `context` for bigger inputs).
 
 **Repo review? Auto-attach a diff instead.** Skip hand-listing changed files — add
 `git_ref` and the server runs `git diff` locally and attaches it as context:
@@ -256,7 +254,7 @@ Handy tools & commands:
 | Want to… | Set |
 |---|---|
 | Point Ollama at a remote host | `ollama_address` |
-| Give slow local models more time | `request_timeout_ms` (ms; default 120000) |
+| Give slow local models more time | `request_timeout_ms` (ms; default 300000) |
 | Review a file / add background | `ask_council(files=[…], context="…")` |
 | Review a diff (repo review) | `ask_council(git_ref="uncommitted")` |
 | Review the whole repo (⚠️ real permission grant) | `ask_council(full_repo_access=true)` |
@@ -265,7 +263,7 @@ Handy tools & commands:
 | Cap output length | `max_tokens` (auto-clamped down to each server's context) |
 | Change default answer style | `response_mode` |
 | Pin an exact council | `council_models` (or `configure_council`) |
-| Match your real plans | `claude_tier` / `chatgpt_tier` / `grok_tier` / `ollama_tier` |
+| Match your real plans | `claude_tier` / `chatgpt_tier` / `ollama_tier` |
 | Tune parallelism | `local_concurrency` / `cloud_concurrency` (per-provider limits come from your tiers) |
 
 Members run under **your own** subscription quotas and local hardware — the plugin adds

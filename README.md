@@ -1,4 +1,4 @@
-# model-council-mcp
+# model-council-mcp-codex
 
 An MCP server that routes a question to a **council** of AI models — local (Ollama, vLLM, TRT-LLM, SGLang) and cloud (OpenAI, Anthropic, X.AI Grok) — and synthesizes their answers in five configurable modes:
 
@@ -22,53 +22,44 @@ An MCP server that routes a question to a **council** of AI models — local (Ol
 
 ---
 
-## Install as a Claude Code plugin (recommended)
+## Install in Codex (recommended)
 
-This repo is a self-contained Claude Code **plugin** — the server is bundled into a single zero-dependency file (`bundle/server.cjs`), so it runs offline against local models with no `npm install` step.
-
-```bash
-# 1. Add this repo as a marketplace (from GitHub)
-/plugin marketplace add tsarihan/model-council-mcp
-
-# 2. Install the plugin
-/plugin install model-council@model-council
-```
-
-**Zero-config — it just works.** On first run the plugin **detects your environment and auto-populates the council with everything usable**: every local Ollama chat model, your top curated Ollama `:cloud` models, and — if you're logged into them — Claude (via the local `claude` CLI) and ChatGPT (via the local `codex` CLI). It tells you what it found, warns that cloud/subscription members use your own quotas, and lets you delete any you don't want. Deletions and setup **persist across reloads**. Ask a question immediately — no setup required.
-
-- On a new session the plugin prints a one-line status (council size, Ollama up/down, which CLIs are installed).
-- Run **`/model-council:status`** any time for the full readout — detected models, CLI login state, per-provider concurrency, and quota usage.
-- Run **`/model-council:setup`** to pick your subscription tiers with an interactive menu.
-
-Everything is optional and adjustable from `/plugin` → Configure. API keys are stored in your system keychain.
-
-**Local development / test install:**
+This repository is a self-contained Codex plugin. The server is bundled into a
+single zero-dependency file (`bundle/server.cjs`), so installation does not run
+`npm install` and local-model use can remain offline.
 
 ```bash
-# Validate the manifest
-claude plugin validate .
+# 1. Add the GitHub repository as a Codex marketplace
+codex plugin marketplace add tsarihan/model-council-mcp-codex
 
-# Load without installing (dev loop)
-claude --plugin-dir /path/to/model-council-mcp
+# 2. Install Model Council
+codex plugin add model-council@model-council-codex
 ```
 
-## Install as a Codex plugin
+Restart Codex after installation. On first use the plugin detects your
+environment and auto-populates the council with usable providers: local Ollama
+chat models, eligible Ollama `:cloud` models, and logged-in Claude and ChatGPT
+subscriptions through the local `claude` and `codex` CLIs. No API key or
+configuration is required to start with providers you already use. Council
+edits and setup persist across sessions.
 
-This repository also includes a native Codex manifest at
-`.codex-plugin/plugin.json`. Its inline Codex MCP map and Claude Code's
-`.mcp.json` both launch the same offline `bundle/server.cjs`. Provider choices
-and council settings can be changed after installation with the `setup_council`
-and `configure_council` tools.
+- Ask Codex to use `ask_council`, or say “ask the model council …”.
+- Invoke **`$model-council-status`** for detected models, CLI login state,
+  concurrency, and quota use.
+- Invoke **`$setup-model-council`** to configure tiers and council membership.
+- Codex will ask you to review plugin-provided MCP servers and hooks before
+  trusting them.
 
-For local development, expose this checkout through a local Codex marketplace,
-install `model-council` from that marketplace, then start a new Codex thread.
-Codex resolves `${PLUGIN_ROOT}` to the installed plugin copy, so no absolute
-checkout path is embedded in the package.
+To update later:
 
-### Codex capability parity
+```bash
+codex plugin marketplace upgrade model-council-codex
+codex plugin remove model-council@model-council-codex
+codex plugin add model-council@model-council-codex
+```
 
-The Codex plugin exposes the same bundled server and all nine MCP tools as the
-Claude Code plugin:
+The plugin exposes the same bundled MCP implementation and all nine tools as
+the upstream Claude Code version:
 
 - `ask_council` and `ask_council_async` support all five modes, inline context,
   files, images, git diffs, full-repository review, verbose results, progress,
@@ -80,12 +71,11 @@ Claude Code plugin:
   `/model-council:status`.
 - `$setup-model-council` is the Codex equivalent of
   `/model-council:setup`.
-- The SessionStart hook works in both hosts and prints host-appropriate setup
-  guidance. Codex requires users to review and trust plugin hooks before it
-  runs them.
+- The upstream Claude SessionStart hook remains available for Claude Code
+  compatibility. Codex exposes the equivalent status/setup guidance through
+  `$model-council-status` and `$setup-model-council`.
 
-Claude Code's install-time `/plugin` configuration UI has no direct Codex
-`userConfig` equivalent. In Codex, configure tiers, members, modes, rounds, and
+Codex has no plugin `userConfig` equivalent. Configure tiers, members, modes, rounds, and
 timeouts through the bundled setup/configuration tools; these changes persist
 in `~/.config/model-council/state.json`. API keys, custom provider endpoints,
 CLI paths, and low-level performance settings use the same environment
@@ -93,18 +83,22 @@ variables documented below. Set them in the environment that launches Codex,
 or use a standalone `codex mcp add ... --env KEY=VALUE` registration when
 per-server values are required.
 
+For local development, register a checkout as the marketplace source:
+
+```bash
+codex plugin marketplace add /absolute/path/to/model-council-mcp-codex
+codex plugin add model-council@model-council-codex
+```
+
 To exercise only the MCP server without installing the plugin:
 
 ```bash
-codex mcp add model-council -- node /absolute/path/to/model-council-mcp/bundle/server.cjs
-codex mcp get model-council
+codex mcp add model-council -- node /absolute/path/to/model-council-mcp-codex/bundle/server.cjs
 ```
 
-Remove that standalone development registration with:
-
-```bash
-codex mcp remove model-council
-```
+This Codex port is derived from
+[tsarihan/model-council-mcp](https://github.com/tsarihan/model-council-mcp) and
+retains its Apache-2.0 license and attribution.
 
 ### Configurable options (prompted at install)
 
@@ -124,7 +118,7 @@ These are all set from **`/plugin` → Configure** in Claude Code (or the equiva
 | Max deconfliction rounds | 1–10 | `3` |
 | OpenAI / Anthropic / X.AI API key | Enable cloud models (stored in keychain) | — |
 | vLLM / TRT-LLM / SGLang servers | `name:host:port` entries | — |
-| Max response tokens | Tokens per completion | `16000` |
+| Max response tokens | Tokens per completion | `32768` |
 | **Per-request timeout (text)** | Wall-clock timeout (ms) for a single completion on text-only calls before the member is recorded as timed-out. Default raised to 5 min because local Ollama models run sequentially. Honoured verbatim by every provider, including the subscription CLIs (no 300s floor). Set via `REQUEST_TIMEOUT_MS`, or at runtime via the `set_council_timeouts` MCP tool. | `300000` (5 min) |
 | **Per-request timeout (repo)** | Timeout used **instead** of the text timeout when `full_repo_access` is set — the CLI member Read/Grep/Globs the repo tree, materially longer. Set via `REPO_REQUEST_TIMEOUT_MS`, or at runtime via `set_council_timeouts`. | `600000` (10 min) |
 | Cloud concurrency (override) | Optional; caps all cloud pools, overriding the per-tier limits | *(unset → tiers)* |
@@ -144,10 +138,12 @@ The council mixes four kinds of member, each gated by a **subscription tier** so
 | **ChatGPT** (via `codex` CLI) | `free` / `plus` / `pro5x` / `pro20x` | no ChatGPT/Codex members | ″ |
 | **Grok** (via `grok` CLI) | `free` / `supergrok` / `premiumplus` / `heavy` | no Grok members | ″ |
 
-Grok defaults to `free` even when the `grok` CLI is installed and logged in — unlike Claude/ChatGPT, it's opt-in, since it's a newer provider added on top of an existing install base. Set `GROK_TIER` (or run `/model-council:setup`) to turn it on.
+Grok defaults to `free` and its CLI provider is currently disabled because no
+safe tool-lockdown value has been verified. The API-keyed X.AI provider remains
+available. See the Grok security warning below.
 
 - **Per-provider concurrency.** Each subscription gets its own concurrency ceiling (e.g. ChatGPT 6, Claude 2, Ollama-cloud 3 on Pro / 10 on Max), so one slow, tightly-rate-limited provider can't starve another. Tier→limit mappings, curated cloud models, and provider model names all live in **`config/subscriptions.json`** — edit it and pull to pick up new plans/models.
-- **Detection.** On boot (and on `council_status`) the server checks: is Ollama reachable, does your plan reach `:cloud`, is the `claude` CLI installed **and logged in** (a locked-down probe), is the `codex` CLI **signed in** (`codex login status`), is the `grok` CLI installed **and logged in** (a locked-down probe, like Claude — the CLI has no dedicated login-status subcommand). Only usable providers are auto-added; the rest get a hint (e.g. *"Codex CLI installed but not signed in — run `codex login`"*).
+- **Detection.** On boot (and on `council_status`) the server checks: is Ollama reachable, does your plan reach `:cloud`, is the `claude` CLI installed **and logged in** (a safe-mode probe), and is the `codex` CLI **signed in** (`codex login status`). Grok CLI login is not probed in normal operation because no safe tool-lockdown mode is known; use the X.AI API provider. Only usable providers are auto-added; the rest get a hint (e.g. *"Codex CLI installed but not signed in — run `codex login`"*).
 - **It persists.** Your tier choices, member edits, and any `configure_council` setting you set (judge model, response mode, max deconfliction rounds) are saved to `~/.config/model-council/state.json` (override with `MODEL_COUNCIL_STATE`), so they survive plugin reloads — each field only persists once you've explicitly set it at least once; an untouched field falls back to its env-var/default as before. Known limitation: writes are atomic (a torn/partial file is never observed) but not cross-process locked — two MCP server processes pointed at the *same* state file and edited at close to the same instant can each read-modify-write past the other, and whichever write lands second wins for any field only it touched. Harmless for the common case (one server process per session); if you deliberately run multiple concurrent sessions against a shared state file, prefer giving each its own `MODEL_COUNCIL_STATE`.
 - **Works standalone too.** The auto-config, `council_status`, and `setup_council` tools all work for a plain `claude mcp add` / MCP-store install; only the SessionStart welcome line and the `/model-council:*` slash commands are Claude-Code-plugin-only sugar.
 
@@ -218,7 +214,9 @@ Set `CLAUDE_CLI=true` to add council members that run through the locally-instal
 - The `claude` CLI must be installed and logged in (`claude` → `/login`, or `claude setup-token`). Set `CLAUDE_CLI_PATH` if it isn't on `PATH`.
 - Each call shells out to `claude -p` with all tools disabled (`--tools ""`), MCP disabled (`--strict-mcp-config`, so it can't recurse into this plugin), and sessions not persisted — a clean single text answer.
 - **`ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` are stripped from the nested call**, because the CLI silently prefers an API key over the subscription. So these members stay subscription-billed even if you also set an API key for the regular `anthropic:` provider.
-- They are **not** auto-discovered — add them explicitly via `configure_council` or `COUNCIL_MODELS` (e.g. `claude-cli:opus`), so they don't quietly draw down your subscription.
+- When the CLI is logged in and the configured Claude tier permits cloud use,
+  these members are auto-added by zero-config setup. Use `configure_council` or
+  `COUNCIL_MODELS` to pin a smaller explicit set.
 
 **Where it works:** anywhere the `claude` CLI actually executes — the Claude Code CLI, or the Claude Desktop app on a machine that also has the CLI. With `/remote-control` on your CLI, driving it from the Claude web/mobile *code* tab still runs `claude -p` on your machine, so it works there too. It does **not** work for a remotely-hosted copy of this server (no local CLI), and it can't borrow the Claude *app's* subscription directly (no client supports MCP sampling yet).
 
@@ -252,7 +250,11 @@ Set `CODEX_CLI=true` to add a council member that runs through the locally-insta
 - The `codex` CLI must be installed and signed in (`codex login`). Set `CODEX_CLI_PATH` if it isn't on `PATH`.
 - Each call shells out to `codex exec` in a **read-only sandbox** (`--sandbox read-only`) with **no approval prompts** (`approval_policy=never`), run in an **empty ephemeral working dir** so the agent has nothing to explore, and reads the final answer from `-o <file>` — a clean single text answer, no file changes.
 - **`OPENAI_API_KEY` / `CODEX_API_KEY` are stripped from the nested call**, because the CLI silently prefers an API key over the ChatGPT login. So this member stays subscription-billed even if you also set an API key for the regular `openai:` provider.
-- Use `CODEX_CLI_MODELS=default` to let Codex pick its configured model, or name specific ones (e.g. `gpt-5-codex`). It is **not** auto-discovered — add `codex-cli:default` explicitly via `configure_council` or `COUNCIL_MODELS`.
+- Use `CODEX_CLI_MODELS=default` to let Codex pick its configured model, or name
+  specific ones (e.g. `gpt-5-codex`). When the CLI is signed in and the
+  configured ChatGPT tier permits cloud use, these members are auto-added by
+  zero-config setup; use `configure_council` or `COUNCIL_MODELS` to pin a
+  smaller explicit set.
 - **Codex is a coding agent**, so answers carry a coding-agent flavor (concise, implementation-oriented) even on general questions — useful as a distinct voice in the council, but not a neutral generalist.
 
 **Where it works:** same as the Claude CLI above — anywhere the `codex` binary actually executes (this machine, or a `/remote-control`-driven CLI running on your machine). It does **not** work for a remotely-hosted copy of this server.
@@ -264,15 +266,22 @@ Set `CODEX_CLI=true` to add a council member that runs through the locally-insta
 > **⚠️ grok-cli members are currently DISABLED (v0.2.64).** grok's tool lockdown does not work: `--tools ''` is read by the CLI as *"flag unset"* and enables its full built-in tool set — including a shell — while `--permission-mode bypassPermissions` (required for headless use) auto-approves every call. This was verified live with a proof-of-execution marker, and `--tools none` was verified to fail the same way. Because a grok **judge** is fed every other member's untrusted text, a single crafted line was arbitrary command execution as your user. No replacement value has been verified yet, so the provider now fails closed with a clear error rather than shipping an unverified guard. `GROK_CLI_UNSAFE_ACCEPT_RCE=true` re-enables it for testing only.
 
 
-Set `GROK_CLI=true` (or a `GROK_TIER` above `free`) to add council members that run through xAI's locally-installed **Grok Build CLI** (`grok -p` / `--prompt-json`) instead of the X.AI API. Inference runs under whatever your `grok` CLI is logged in with — typically your own **SuperGrok / X Premium+ / Heavy subscription** — so these members don't consume API credits. They appear as `grok-cli:grok-4.5` (or `grok-cli:<model>`).
+The provider fails closed even when `GROK_CLI=true` or a paid `GROK_TIER` is
+selected. `GROK_CLI_UNSAFE_ACCEPT_RCE=true` bypasses that guard for isolated
+security testing only; it must not be used for normal council work because
+untrusted peer output can trigger arbitrary commands through a Grok member or
+judge.
 
 **Behavior & requirements**
 - The `grok` CLI must be installed and logged in. Set `GROK_CLI_PATH` if it isn't on `PATH`.
-- Each call shells out to `grok` with all tools disabled (`--tools ''`) and `--permission-mode bypassPermissions` (required for headless use — without it the CLI silently cancels the turn instead of completing).
+- The experimental subprocess uses `--tools none` and
+  `--permission-mode bypassPermissions`, but live testing confirmed that this
+  still leaves Grok's built-in tools enabled. The explicit unsafe environment
+  flag—not the `--tools` value—is the only guard.
 - **`XAI_API_KEY` is stripped from the nested call**, because the CLI accepts it as an alternate auth path that would otherwise switch billing to per-token instead of the subscription.
 - Images are passed as native `--prompt-json` content blocks (no Read-tool or `-i`-flag workaround needed — the CLI accepts structured image content directly).
 - A text-only prompt (the common case) is written to a temp file and passed via `--prompt-file` rather than inline, avoiding the OS argv-length limit a large `context`/`files`/git-diff attachment or judge prompt could otherwise hit. An image-bearing call still passes `--prompt-json` inline (no file-based channel exists for that content-block shape), so the same argv-length exposure remains there, bounded by the existing image size caps.
-- Unlike Claude/ChatGPT's CLI members, **Grok defaults to `free`** (opt-in) — set `GROK_TIER` above `free` or `GROK_CLI=true` explicitly to add it to the auto-populated council, since this is a newer provider added on top of an existing install base.
+- Grok defaults to `free` and is excluded from the auto-populated council.
 
 **Where it works:** anywhere the `grok` binary actually executes (this machine, or a `/remote-control`-driven CLI running on your machine). It does **not** work for a remotely-hosted copy of this server.
 
@@ -399,7 +408,7 @@ Send a question to the full council.
 
 **Completion markers & timeout cuts.** Every completed answer is wrapped in `═══════ BEGINNING OF RESPONSE ═══════` / `═══════ END OF RESPONSE ═══════` delimiters (the JSON payload sits intact on its own lines between them — strip the first and last line to parse). The markers are the completion signal: the tool returns the moment the council finishes, so it never waits the full timeout just because the timeout is set. If a member's completion is cut by the per-completion timeout, the result carries `timeoutNotice: "RESPONSE TIMED OUT, INCREASE TIMEOUT IF MESSAGE IS CUT"` plus a `timedOutMembers` array of the cut labels — this surfaces even under `verbose: false`. Raise the budget with `set_council_timeouts` (or `REQUEST_TIMEOUT_MS` / `REPO_REQUEST_TIMEOUT_MS`) and re-ask.
 
-**Attach context / files.** Add `"context"` (inline background text) and/or `"files"` (an array of local file paths). Files are read from disk and fenced with a `----- FILE:<nonce>: <path> -----` header (a random per-call token, so a file/diff whose content contains a fake fence marker can't forge a boundary the model would mistake for real) so every member sees them as labelled context alongside the question. Caps: 256 KB/file, 768 KB total, 20 files, 768 KB for `"context"` itself, 256 KB for `"question"` — for anything larger than the question cap, pass it via `context` instead. A missing/oversized/binary file (or an oversized `question`/`context`) returns a clear error rather than being silently dropped or truncated. Note: `files`/`images` read any path the server process can read, with no root restriction — the MCP caller is trusted the same way a local `Read` tool call would be.
+**Attach context / files.** Add `"context"` (inline background text) and/or `"files"` (an array of local file paths). Files are read from disk and fenced with a `----- FILE:<nonce>: <path> -----` header (a random per-call token, so a file/diff whose content contains a fake fence marker can't forge a boundary the model would mistake for real) so every member sees them as labelled context alongside the question. Default caps: 512 KB/file, 1.5 MB total, 32 files, 1 MB for `"context"` itself, 256 KB for `"question"` — for anything larger than the question cap, pass it via `context` instead. A missing/oversized/binary file (or an oversized `question`/`context`) returns a clear error rather than being silently dropped or truncated. Note: `files`/`images` read any path the server process can read, with no root restriction — the MCP caller is trusted the same way a local `Read` tool call would be.
 
 ```json
 {
@@ -632,7 +641,7 @@ The welcome/status readout (works in **every** client and install method). Retur
 
 ### `setup_council`
 
-Set subscription tiers (`chatgpt`, `claude`, `ollama`), then re-detect and auto-populate the council with everything usable. Persists across reloads. Concurrency and newly-registered providers take full effect after a `/reload-plugins`.
+Set subscription tiers (`chatgpt`, `claude`, `ollama`, `grok`), then re-detect and auto-populate the council with everything usable. Grok CLI remains fail-closed unless its unsafe testing override is explicitly acknowledged; prefer X.AI API access. Persists across reloads. Concurrency and newly-registered providers take full effect after a `/reload-plugins`.
 
 ### `set_council_timeouts`
 
@@ -734,8 +743,8 @@ model-council runs **entirely locally** and stores nothing off your machine. Ful
 
 - **Where your prompts go.** A question is sent only to the model endpoints you configure: your local Ollama server, any self-hosted vLLM/TRT-LLM/SGLang servers, cloud API providers you supply keys for (OpenAI/Anthropic/X.AI), Ollama `:cloud` models (routed through Ollama's cloud infrastructure), and — for subscription members — your own local `claude` / `codex` / `grok` CLIs. **Cloud models (of any provider) send your prompts to that provider's cloud.** Check each cloud provider's data-retention and training policies before use, and do not send personal or sensitive data to any cloud provider whose policies you have not reviewed. There is no model-council backend and no telemetry; nothing is sent to the author.
 - **Credentials.** API keys are stored in your client's secure storage (system keychain) and used only to call the provider you gave them for. Subscription members run under **your own** Claude/ChatGPT/Grok login via the first-party CLIs; the server strips `ANTHROPIC_*` / `OPENAI_*` / `CODEX_*` / `XAI_API_KEY` keys from those child processes so inference is billed to your subscription, not an API key.
-- **On disk.** The only file written is `~/.config/model-council/state.json` (your selected tiers + council members), plus `~/.codex` / Claude CLI / Grok CLI session state owned by those tools. No conversation content is persisted by this server.
-- **Subprocesses.** Detection and subscription inference shell out to the locally-installed `claude`, `codex`, and `grok` binaries (read-only sandbox for Codex; MCP/tools disabled and `bypassPermissions` scoped to the nested call for Claude/Grok so they can't recurse or take actions).
+- **On disk.** The only persistent application-state file is `~/.config/model-council/state.json` (your selected tiers + council members), plus session state owned by the provider CLIs. Subscription CLI calls can also create temporary prompt, output, or image files; they are removed on a best-effort basis, but a crash or cleanup failure can leave a remnant. No conversation content is intentionally persisted by this server.
+- **Subprocesses.** Detection and subscription inference shell out to the locally-installed `claude`, `codex`, and `grok` binaries. Codex uses a read-only sandbox. Claude uses `--safe-mode`, an isolated working directory, strict MCP configuration, and disabled tools. Grok CLI members are disabled by default because its tested tool-lockdown values still permit arbitrary commands; the unsafe RCE override is for isolated testing only.
 - **`full_repo_access` (opt-in, off by default).** When set, `claude-cli`/`codex-cli`/harness members can read any file in the granted repo for that call, and their answer may include file contents from anywhere in the repo. It never grants write/execute access. For cloud members (subscription CLIs, API-keyed providers, Ollama `:cloud`, harness `:cloud`) repo contents are sent to that provider's cloud — the same data-handling considerations above apply. Don't enable it on a repo containing secrets/credentials you wouldn't send to that provider.
 - **Judge and peer trust.** `categorized`/`deconflicted`/`pooled`/`dialectic` modes feed raw member responses into a judge-model prompt, prefixed with an explicit "treat this as data, not instructions" framing as defense-in-depth. The multi-round modes' member-facing prompts (deconfliction rounds, the pooled repoll, dialectic defense/selection) carry an equivalent framing when they show a member other members' positions — worded for a member meant to substantively engage with the content, not just classify it. Neither is a hard guarantee — a member response (especially one built from attacker-influenced content, e.g. `full_repo_access` on a hostile repo) could in principle contain text crafted to steer a judge's classification or another member's answer. Treat judge-synthesized fields (`commonAgreement`, `conflicting`, pooled/dialectic digests) with the same skepticism you'd apply to any LLM output over untrusted input.
 

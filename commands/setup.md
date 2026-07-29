@@ -4,12 +4,13 @@ description: Interactively set up the model council — pick subscription tiers 
 
 Help the user set up the model council interactively.
 
-1. Call the `council_status` tool first to detect their environment (local Ollama models, cloud reachability, whether the Claude and Codex CLIs are installed and logged in) and see the current council + tiers.
+1. Call the `council_status` tool first to detect their environment (local Ollama models, cloud reachability, whether the Claude, Codex, and Grok CLIs are installed and logged in) and see the current council + tiers.
 
 2. For each subscription they might want to change, use an interactive selectable menu (AskUserQuestion) so they can pick with arrow keys — only ask about ones that are relevant (e.g. don't push a Claude tier if the Claude CLI isn't installed):
    - **Claude**: `free` · `pro` · `max5x` · `max20x`
    - **ChatGPT**: `free` · `plus` · `pro5x` · `pro20x`
    - **Ollama**: `free` · `pro` · `max`
+   - **Grok**: `free` · `supergrok` · `premiumplus` · `heavy` (CLI access is intentionally fail-closed; prefer the X.AI API)
    Free = no cloud/subscription members for that provider. Higher tiers raise that provider's concurrency limit.
 
 3. Call `setup_council` with the chosen tiers. Then show the user:

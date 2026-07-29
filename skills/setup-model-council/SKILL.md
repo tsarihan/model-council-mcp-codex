@@ -10,7 +10,9 @@ description: Configure Model Council subscription tiers and auto-populate usable
    - Claude: `free`, `pro`, `max5x`, `max20x`
    - ChatGPT: `free`, `plus`, `pro5x`, `pro20x`
    - Ollama: `free`, `pro`, `max`
-   - Grok: `free`, `supergrok`, `premiumplus`, `heavy`
+   - Grok: `free`, `supergrok`, `premiumplus`, `heavy` — explain that the CLI
+     provider fails closed without an unsafe RCE testing override and direct
+     normal users to the X.AI API provider
    Skip an unavailable CLI unless the user explicitly wants to configure it for later.
 3. Call `setup_council` with the chosen tier fields.
 4. If the user asks to select members or defaults, call `configure_council` with only the requested fields. Preserve full model IDs exactly as returned by the tools.

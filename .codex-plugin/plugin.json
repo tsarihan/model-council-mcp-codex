@@ -6,8 +6,8 @@
     "name": "Tom Sarihan",
     "url": "https://github.com/tsarihan"
   },
-  "homepage": "https://github.com/tsarihan/model-council-mcp",
-  "repository": "https://github.com/tsarihan/model-council-mcp",
+  "homepage": "https://github.com/tsarihan/model-council-mcp-codex",
+  "repository": "https://github.com/tsarihan/model-council-mcp-codex",
   "license": "Apache-2.0",
   "keywords": ["mcp", "llm", "model-council", "ollama", "codex"],
   "skills": "./skills/",
