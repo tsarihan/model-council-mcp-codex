@@ -14,6 +14,8 @@ Present:
   the returned status explicitly says it was probed under the unsafe testing override.
 - Current members grouped by provider, preserving every model ID verbatim.
 - Resolved tiers, provider concurrency limits, and text/repository timeouts.
+- The council-wide reasoning effort in effect. `null` means none is sent, so each
+  model runs at its own default depth — say that rather than naming a level.
 - The quota warning verbatim.
 - Configuration hints and any pending-reload notice.
 
