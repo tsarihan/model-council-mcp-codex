@@ -1,6 +1,6 @@
 {
   "name": "model-council",
-  "version": "0.2.91",
+  "version": "0.2.92",
   "description": "Ask a council of local and cloud AI models for individual, categorized, pooled, dialectic, or deconflicted answers.",
   "author": {
     "name": "Tom Sarihan",
