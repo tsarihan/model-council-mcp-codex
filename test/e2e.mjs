@@ -1534,6 +1534,10 @@ async function main() {
       check('round-17: paid grok tier without RCE opt-in adds no grok-cli members',
         !(noRceSt.council?.members ?? []).some(l => l.startsWith('grok-cli:')),
         (noRceSt.council?.members ?? []).join(','));
+      check('round-17: status directs normal users to X.AI API instead of claiming a paid tier enables Grok CLI',
+        (noRceSt.hints ?? []).some(h => /X\.AI API provider/.test(h)) &&
+          !(noRceSt.hints ?? []).some(h => /run setup_council to add Grok members/.test(h)),
+        JSON.stringify(noRceSt.hints));
     } finally {
       await noRceClient.close();
     }

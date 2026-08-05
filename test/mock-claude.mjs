@@ -45,6 +45,14 @@ let input = '';
 process.stdin.on('data', (d) => (input += d));
 process.stdin.on('end', () => {
   const model = flag('--model') ?? '?';
+  if (/Reply with the single word READY/.test(input)) {
+    const safe = args.includes('--safe-mode');
+    const isolated = /claude-detect-cwd-/.test(process.cwd());
+    if (!safe || !isolated) {
+      process.stderr.write(`unsafe detection probe: safe=${safe} cwd=${process.cwd()}\n`);
+      process.exit(2);
+    }
+  }
   // Simulate a CLI failure reported with exit 0 + is_error (rate limit, etc.).
   if (model === 'erroring') {
     process.stdout.write(
