@@ -45,14 +45,6 @@ let input = '';
 process.stdin.on('data', (d) => (input += d));
 process.stdin.on('end', () => {
   const model = flag('--model') ?? '?';
-  if (/Reply with the single word READY/.test(input)) {
-    const safe = args.includes('--safe-mode');
-    const isolated = /claude-detect-cwd-/.test(process.cwd());
-    if (!safe || !isolated) {
-      process.stderr.write(`unsafe detection probe: safe=${safe} cwd=${process.cwd()}\n`);
-      process.exit(2);
-    }
-  }
   // Simulate a CLI failure reported with exit 0 + is_error (rate limit, etc.).
   if (model === 'erroring') {
     process.stdout.write(
@@ -132,6 +124,7 @@ process.stdin.on('end', () => {
     `mock-claude model=${model} key=${key} tools=${toolsTag} ` +
     `mcp=${strictMcp ? 'strict' : 'default'} sys=${sysReplace ? 'replace' : 'default'} ${readSummary} ${repoListing} ` +
     `effort=${flag('--effort') ?? 'unset'} ` +
+    `web=${(flag('--allowedTools') ?? '').includes('WebSearch') && (toolsValue ?? '').includes('WebSearch') ? 'on' : 'off'} ` +
     `cwd=${process.cwd()} :: ${input.trim().slice(0, 80)}`;
   process.stdout.write(
     JSON.stringify({
