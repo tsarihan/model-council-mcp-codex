@@ -1,12 +1,12 @@
 {
   "name": "model-council",
-  "description": "Ask local and cloud AI models for individual, categorized, deconflicted, pooled, or dialectic answers.",
-  "version": "0.2.95",
+  "description": "Ask a council of local (Ollama, vLLM, TRT-LLM, SGLang) and cloud (OpenAI, Anthropic, X.AI Grok) AI models. Get individual, categorized (agreement / complementary / conflicting), or fully deconflicted answers with a resolution score.",
+  "version": "0.2.94",
   "author": {
     "name": "Tom Sarihan"
   },
-  "homepage": "https://github.com/tsarihan/model-council-mcp-codex",
-  "repository": "https://github.com/tsarihan/model-council-mcp-codex",
+  "homepage": "https://github.com/tsarihan/model-council-mcp",
+  "repository": "https://github.com/tsarihan/model-council-mcp",
   "license": "Apache-2.0",
   "keywords": [
     "ollama",
