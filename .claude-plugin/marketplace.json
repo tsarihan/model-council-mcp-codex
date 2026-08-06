@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "A configurable multi-model council for local and cloud LLMs.",
-    "version": "0.2.95"
+    "version": "0.2.98"
   },
   "plugins": [
     {
